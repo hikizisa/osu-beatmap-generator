@@ -1,0 +1,6 @@
+# separate mapping for easy, normal, hard, insane+
+# use distance snap for easy, normal so it's easier
+
+# distinguish anti jump or stack and usual jump pattern
+# distance should be flexible so difficulty can be adjusted
+#
