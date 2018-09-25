@@ -1,5 +1,5 @@
 import numpy as np
-import sys, os, configparser
+import os, configparser
 
 #returns list of files in dir
 def getosulist(dir):
