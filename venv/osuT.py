@@ -1,5 +1,5 @@
 class Object:
-	
+	pass
 
 class BeatmapData:
 	def __init__():
@@ -19,7 +19,10 @@ class BeatmapData:
 		self.objects.append(object)
 	def sortobjectTime():
 		self.objects.sort()
-		
+
+class SongData:
+	def __init__():
+		self.fft = []
 		
 if __name__ == "__main__": 
 	#testcode
