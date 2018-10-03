@@ -1,7 +1,8 @@
 import numpy as np
 import os, configparser
 
-#returns list of files in dir
+# this script is a script to get song lists from given folder
+
 def getosulist(dir):
     #if there's no song folder, create one
     if not (os.path.isdir(dir)):
@@ -23,11 +24,12 @@ def saveosulist(list, outputfile):
     nplist = np.array(list)
     np.save(outputfile, nplist)
 
-config = configparser.ConfigParser()
-config.read("automapper.cfg")
+def main():
+    config = configparser.ConfigParser()
+    config.read("automapper.cfg")
 
-osuList = getosulist(config.get('ReadSongs', 'songsdir'))
-savePath = os.path.join(config.get('ReadSongs','savename'))
-saveosulist(osuList, savePath)
+    osuList = getosulist(config.get('ReadSongs', 'songsdir'))
+    savePath = os.path.join(config.get('ReadSongs','savename'))
+    saveosulist(osuList, savePath)
 
-print(np.load(savePath+'.npy'))
+    print(np.load(savePath+'.npy'))
