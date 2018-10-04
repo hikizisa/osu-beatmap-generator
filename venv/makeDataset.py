@@ -1,9 +1,8 @@
 import numpy as np
 import os, configparser
 import osuT as o
-import parseAudio
-import parseMap
-from readSongList import
+import parseAudio as pA
+import parseMap as pM
 
 # this is a mainscript for making training dataset
 
