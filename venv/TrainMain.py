@@ -1,5 +1,5 @@
 import numpy as np
-import os, configparser
+import os
 import osuT as o
 import makeDataset,readSongList
 

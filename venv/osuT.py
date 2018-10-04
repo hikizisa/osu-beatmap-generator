@@ -23,6 +23,3 @@ class BeatmapData:
 class SongData:
 	def __init__():
 		self.fft = []
-		
-if __name__ == "__main__": 
-	#testcode
