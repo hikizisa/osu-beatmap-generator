@@ -1,32 +1,59 @@
-import os
-import osuT as o
-import configparser
-import subprocess as sp
+import os, configparser
+import scipy.io.wavfile as wavfile, scipy
+import subprocess as sp, numpy as np
 
 # this is a main script for making audio dataset with fft
 
-# convert mp3 file to wav file
-def toWav(audio):
-    if os.path.isfile(audio) == False:
-        raise Exception("failed to load audio : " + audio)
-
+def findffmpeg():
     config = configparser.ConfigParser()
     config.read("automapper.cfg")
 
     ffmpegDir = config.get('ParseAudio', 'ffmpeg')
-    wav = ('.').join(audio.split('.')[:-1]) + '.wav'
-
     ffmpeg = os.path.join(ffmpegDir,'ffmpeg.exe')
     if os.path.isfile(ffmpeg) == False:
-        raise Exception("failed to find ffmpeg")
+        raise Exception("Failed to find ffmpeg")
+    else:
+        return ffmpeg
 
-    p = sp.Popen([ffmpeg, '-i', audio, wav], stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
+# convert mp3 file to wav file
+def toWav(audio):
+    if os.path.isfile(audio) == False:
+        raise Exception("Failed to load audio : " + audio)
+    wav = ('.').join(audio.split('.')[:-1]) + '.wav'
 
+    p = sp.Popen([findffmpeg(), '-i', audio, wav], stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
+
+    return wav
+
+# make array of wave data from wav file
+def dataWav(wav):
     if os.path.isfile(wav) == False:
-        raise Exception('error occurred while converting : ' + audio + '\n')
+        raise Exception("Couldn't find wav file : " + wav)
+
+    data = wavfile.read(wav)[1]
+
+    return data
+
+# make fft result for given timing point(ms).
+# stft for entire data takes so long time.
+def doFft(data, time):
+    config = configparser.ConfigParser()
+    config.read("automapper.cfg")
+    try:
+        samples = int(config.get('ParseAudio', 'samples'))
+    except SyntaxError:
+        samples = 50
+
+    # Samplerate = 44100/s
+    timeframe = int(44.1*time)
+    ftdata = scipy.fft(data[timeframe - int(samples/2) : timeframe + int(samples/2)])
+
+    # Array consists of data for each frequency, tuple of data for each channel.
+    return ftdata
 
 def loadSongData(audio):
-    pass
+    toWav(audio)
+    ftArr = doFft(('.').join(audio.split('.')[:-1]) + '.wav')
 
 if __name__ == "__main__":
     pass

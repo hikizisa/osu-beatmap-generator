@@ -1,8 +1,6 @@
-import numpy as np
-import os, configparser
+import numpy as np, os, configparser
 import osuT as o
-import parseAudio as pA
-import parseMap as pM
+import parseAudio, parseMap
 
 # this is a mainscript for making training dataset
 
