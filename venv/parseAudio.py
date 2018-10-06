@@ -22,7 +22,6 @@ def toWav(audio):
     wav = ('.').join(audio.split('.')[:-1]) + '.wav'
 
     p = sp.Popen([findffmpeg(), '-i', audio, wav], stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
-
     return wav
 
 # make array of wave data from wav file
@@ -42,18 +41,20 @@ def doFft(data, time):
     try:
         samples = int(config.get('ParseAudio', 'samples'))
     except SyntaxError:
-        samples = 50
+        samples = 1000
 
     # Samplerate = 44100/s
     timeframe = int(44.1*time)
-    ftdata = scipy.fft(data[timeframe - int(samples/2) : timeframe + int(samples/2)])
+
+    ftdata = []
+    for i in range(0, int(samples/2), 1):
+        ftdata.append(scipy.fft(data[timeframe - int(samples/2) + i : timeframe + int(samples/2) + i]))
 
     # Array consists of data for each frequency, tuple of data for each channel.
     return ftdata
 
 def loadSongData(audio):
-    toWav(audio)
-    ftArr = doFft(('.').join(audio.split('.')[:-1]) + '.wav')
+    return dataWav(toWav(audio))
 
 if __name__ == "__main__":
     pass

@@ -32,4 +32,4 @@ def main():
     savePath = os.path.join(config.get('ReadSongs','savename'))
     saveosulist(osuList, savePath)
 
-    print(np.load(savePath+'.npy'))
+    print(np.load(savePath+'songlist.npy'))
