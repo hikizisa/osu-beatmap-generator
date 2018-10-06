@@ -1,5 +1,5 @@
 import numpy as np, os, configparser
-import osuT as o
+import osuType as o
 import parseAudio, parseMap
 
 # this is a mainscript for making training dataset

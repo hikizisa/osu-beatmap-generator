@@ -1,0 +1,6 @@
+.env
+bot.db
+__pycache__/
+bot.db-journal
+/tmp
+*.c
