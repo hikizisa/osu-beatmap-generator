@@ -10,6 +10,7 @@ requirements:
 ## Setup Guide
 For Windows development
 * conda install -c conda-forge ffmpeg libsndfile
+* conda install -c anaconda llvm
 * activate.bat
 * pip install -e .
 
