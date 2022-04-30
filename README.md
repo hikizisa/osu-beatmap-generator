@@ -1,4 +1,4 @@
-# osu-auto-mapper
+# osu-beatmap-generator
 
 ReadSongs.py : get beatmap file lists from song folder
 
@@ -9,10 +9,10 @@ requirements:
 
 ## Setup Guide
 For Windows development
-* conda install -c conda-forge ffmpeg libsndfile
-* conda install -c anaconda llvm
-* activate.bat
-* pip install -e .
+- conda install -c conda-forge ffmpeg libsndfile
+- conda install -c anaconda llvm
+- activate.bat
+- pip install -e .
 
 ## Activate Venv
-* activate.bat
+- activate.bat

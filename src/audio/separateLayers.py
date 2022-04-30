@@ -16,6 +16,6 @@ def separate_audio(file, layers=5, sample_rate=44100):
 
 if __name__ == "__main__":
     audio_loader = AudioAdapter.default()
-    prediction = separate_audio("../../data/chitose.mp3")
+    prediction = separate_audio("../../data/chitose.mp3", 4)
     for k, v in prediction.items():
-        audio_loader.save("../../data/output/{}.mp3".format(k), v)
+        audio_loader.save("../../data/output/{}.mp3".format(k), v, 44100)
