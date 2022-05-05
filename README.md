@@ -13,6 +13,8 @@ For Windows development
 - conda install -c anaconda llvm
 - activate.bat
 - pip install -e .
+- cd python_osu_parser
+- pip install -e .
 
 ## Activate Venv
 - activate.bat
