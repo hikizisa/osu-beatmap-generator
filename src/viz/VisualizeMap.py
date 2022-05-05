@@ -20,10 +20,11 @@ class BeatmapRenderer:
     def render(self, offset, window = None):
         self.fig = plt.figure()
         self.ax = self.fig.gca()
+        self.ax.axis('off')
         canvas = FigureCanvasAgg(self.fig)
         
-        plt.xlim([0, 480])
-        plt.ylim([0, 360])
+        plt.xlim([-160, 640])
+        plt.ylim([-140, 460])
 
         if window == None:
             window = self.window
@@ -36,6 +37,8 @@ class BeatmapRenderer:
         
         canvas.draw()
         img = PIL.Image.frombytes('RGB', canvas.get_width_height(), canvas.tostring_rgb())
+        
+        plt.close(self.fig)
 
         return img
         
@@ -75,7 +78,7 @@ if __name__ == "__main__":
     renderer = BeatmapRenderer(beatmap)
     
     import cv2
-    videodims = (640, 480)
+    videodims = (800, 600)
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')    
     video = cv2.VideoWriter("test.mp4", fourcc, 60, videodims)
 

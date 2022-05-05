@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="hikizisa",
+    name="osu-beatmap-generator",
     version="1.0.0",
     author="hikizisa",
 
@@ -16,7 +16,7 @@ setuptools.setup(
 
     long_description_content_type="text/markdown",
 
-    url="<https://github.com/hikizisa/osu-auto-mapper>",
+    url="<https://github.com/hikizisa/osu-beatmap-generator>",
 
     packages=setuptools.find_packages(),
 
@@ -33,6 +33,7 @@ setuptools.setup(
     install_requires=[
         'spleeter >= 2.3.0',
         'matplotlib >= 3.5.2',
+        'opencv-python >= 3.4.0',
     ],
 
     python_requires='>=3.6',
