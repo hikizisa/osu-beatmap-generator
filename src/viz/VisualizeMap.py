@@ -78,7 +78,7 @@ if __name__ == "__main__":
     renderer = BeatmapRenderer(beatmap)
     
     import cv2
-    videodims = (800, 600)
+    videodims = (640, 480)
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')    
     video = cv2.VideoWriter("test.mp4", fourcc, 60, videodims)
 
