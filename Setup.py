@@ -31,7 +31,8 @@ setuptools.setup(
     ],
 
     install_requires=[
-        'spleeter >= 2.3.0'
+        'spleeter >= 2.3.0',
+        'matplotlib >= 3.5.2',
     ],
 
     python_requires='>=3.6',
