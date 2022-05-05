@@ -1,8 +1,11 @@
 import matplotlib.pyplot as plt
+import matplotlib
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 import osuparser.beatmapparser as bp
 import osuparser.utils as utils
+import osuparser.slidercalc as slidercalc
 import io
+from copy import copy
 import PIL
 import numpy as np
 
@@ -16,6 +19,8 @@ class BeatmapRenderer:
         
         self.radius = utils.cs_to_radius(self.cs)
         self.window = utils.ar_to_time(self.ar)[0]
+        self.obj_cache = {}
+        self.line_width = 0.5
     
     def render(self, offset, window = None):
         self.fig = plt.figure()
@@ -24,15 +29,15 @@ class BeatmapRenderer:
         canvas = FigureCanvasAgg(self.fig)
         
         plt.xlim([-160, 640])
-        plt.ylim([-140, 460])
+        plt.ylim([460, -140])
 
         if window == None:
             window = self.window
         
         visible_objs = []
-        for obj in self.beatmap["hitObjects"]:
+        for i, obj in enumerate(self.beatmap["hitObjects"]):
             if (offset - window <= obj["startTime"] <= offset + window):
-                visible_objs.append(obj)
+                visible_objs.append((i, obj))
         self.draw_objects(visible_objs, offset)
         
         canvas.draw()
@@ -45,27 +50,86 @@ class BeatmapRenderer:
     def get_alpha(self, time):
         return utils.remain_time_to_opacity(self.ar, time)
 
-    def draw_circle(self, obj, alpha):
+    def draw_circle(self, obj):
         assert obj["object_name"] == "circle"
         circle = plt.Circle((obj["position"][0], obj["position"][1]), self.radius,
-            fc='white', ec="black", linewidth=4, alpha=alpha)
-        self.ax.add_patch(circle)
+            fc='white', ec="black", linewidth=self.line_width)
         
-    def draw_slider_boundary(self, obj):
-        pass
+        return [circle]
+        
+    def get_slider_boundary(self, obj):
+        # slidercalc.get_boundary_pair_at_length(obj["curveType"], obj["points"], self.radius)
+        vertices = [[], [], []]
+        last_pt = obj["position"]
+        for i in range(1, obj["pixelLength"]):
+            pt = slidercalc.get_end_point(obj["curveType"], i, obj["points"])
+            tangent = [pt[0] - last_pt[0], pt[1] - last_pt[1]]
+            last_pt = pt
+            
+            norm = slidercalc.norm(tangent)
+            tangent[1] /= norm
+            tangent[0] /= norm
+            normal = [tangent[1], -tangent[0]]
+            
+            pt1 = [pt[0] + normal[0] * self.radius, pt[1] + normal[1] * self.radius]
+            pt2 = [pt[0] - normal[0] * self.radius, pt[1] - normal[1] * self.radius]
+            vertices[0].append(pt1)
+            vertices[1].append(pt2)
+            vertices[2].append(pt)
+        
+        return vertices
 
     def draw_slider(self, obj):
-        pass
+        assert obj["object_name"] == "slider"
+        head = plt.Circle((obj["position"][0], obj["position"][1]), self.radius,
+            fc='white', ec="black", linewidth=self.line_width)
+        tail = plt.Circle((obj["end_position"][0], obj["end_position"][1]), self.radius,
+            fc='white', ec="black", linewidth=self.line_width)
+            
+        vertices = self.get_slider_boundary(obj)
+        
+        path1 = matplotlib.path.Path(vertices[0])
+        path2 = matplotlib.path.Path(vertices[1])
+        patch1 = matplotlib.patches.PathPatch(path1, ec='black', linewidth=self.line_width)
+        patch2 = matplotlib.patches.PathPatch(path2, ec='black', linewidth=self.line_width)
+        
+        patches = [head, tail, patch1, patch2]
+        
+        return patches
         
     def draw_spinner(self, obj):
         pass
         
     def draw_objects(self, objs, offset):
-        for obj in objs:
+        last_obj = None
+        for i, obj in reversed(objs):
             alpha = self.get_alpha(offset - obj["startTime"])
-            if obj["object_name"] == "circle":
-                self.draw_circle(obj, alpha)
-            # check object type and draw it
+            patches = []
+            if i not in self.obj_cache:
+                # check object type and draw it
+                if obj["object_name"] == "circle":
+                    patches = self.draw_circle(obj)
+                elif obj["object_name"] == "slider":
+                    patches = self.draw_slider(obj)
+                self.obj_cache[i] = patches
+            else: 
+                patches = self.obj_cache[i]
+                
+            for patch in patches:
+                patch.set_alpha(alpha)
+                self.ax.add_patch(copy(patch))
+            
+            if obj["newCombo"] == 0:
+                if last_obj is not None:
+                    end_pos = obj["end_position"] if obj["object_name"] == "slider" else obj["position"]
+                    begin_pose = last_obj["position"]
+                    begin = slidercalc.point_on_line(last_pos, obj["position"], self.radius / 2.0)
+                    end = slidercalc.point_on_line(last_pos, obj["position"], slidercalc.distance - self.radius / 2.0)
+                    path = matplotlib.path.Path([begin, end])
+                    patch = matplotlib.patches.PathPatch(path, alpha=alpha)
+                    self.ax.add_patch(patch)
+                    
+            # fig.text(240.0, 180.0, '1')
             
 def make_pattern_beatmap(objs, cs=4):
     # make beatmap object from object list
@@ -82,9 +146,10 @@ if __name__ == "__main__":
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')    
     video = cv2.VideoWriter("test.mp4", fourcc, 60, videodims)
 
-    for i in range(200):
-        img = renderer.render(beatmap["hitObjects"][20]["startTime"] + i * 16)
+    for i in range(1000):
+        img = renderer.render(6500 + i * 16)
         video.write(cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR))
+        print("Finished processing {}".format(i), end = '\r')
         
     video.release()
     
