@@ -19,8 +19,7 @@ class BeatmapRenderer:
         
         self.radius = utils.cs_to_radius(self.cs)
         self.window = utils.ar_to_time(self.ar)[0]
-        self.obj_cache = {}
-        self.line_width = 0.5
+        self.line_width = 1.0
     
     def render(self, offset, window = None):
         self.fig = plt.figure()
@@ -35,9 +34,9 @@ class BeatmapRenderer:
             window = self.window
         
         visible_objs = []
-        for i, obj in enumerate(self.beatmap["hitObjects"]):
+        for obj in self.beatmap["hitObjects"]:
             if (offset - window <= obj["startTime"] <= offset + window):
-                visible_objs.append((i, obj))
+                visible_objs.append(obj)
         self.draw_objects(visible_objs, offset)
         
         canvas.draw()
@@ -56,28 +55,6 @@ class BeatmapRenderer:
             fc='white', ec="black", linewidth=self.line_width)
         
         return [circle]
-        
-    def get_slider_boundary(self, obj):
-        # slidercalc.get_boundary_pair_at_length(obj["curveType"], obj["points"], self.radius)
-        vertices = [[], [], []]
-        last_pt = obj["position"]
-        for i in range(1, obj["pixelLength"]):
-            pt = slidercalc.get_end_point(obj["curveType"], i, obj["points"])
-            tangent = [pt[0] - last_pt[0], pt[1] - last_pt[1]]
-            last_pt = pt
-            
-            norm = slidercalc.norm(tangent)
-            tangent[1] /= norm
-            tangent[0] /= norm
-            normal = [tangent[1], -tangent[0]]
-            
-            pt1 = [pt[0] + normal[0] * self.radius, pt[1] + normal[1] * self.radius]
-            pt2 = [pt[0] - normal[0] * self.radius, pt[1] - normal[1] * self.radius]
-            vertices[0].append(pt1)
-            vertices[1].append(pt2)
-            vertices[2].append(pt)
-        
-        return vertices
 
     def draw_slider(self, obj):
         assert obj["object_name"] == "slider"
@@ -85,15 +62,20 @@ class BeatmapRenderer:
             fc='white', ec="black", linewidth=self.line_width)
         tail = plt.Circle((obj["end_position"][0], obj["end_position"][1]), self.radius,
             fc='white', ec="black", linewidth=self.line_width)
-            
-        vertices = self.get_slider_boundary(obj)
+                  
+        #vertices = self.get_slider_boundary(obj)
         
-        path1 = matplotlib.path.Path(vertices[0])
-        path2 = matplotlib.path.Path(vertices[1])
-        patch1 = matplotlib.patches.PathPatch(path1, ec='black', linewidth=self.line_width)
-        patch2 = matplotlib.patches.PathPatch(path2, ec='black', linewidth=self.line_width)
+        #path1 = matplotlib.path.Path(vertices[0])
+        #path2 = matplotlib.path.Path(vertices[1])
+        #patch1 = matplotlib.patches.PathPatch(path1, ec='black', linewidth=self.line_width)
+        #patch2 = matplotlib.patches.PathPatch(path2, ec='black', linewidth=self.line_width)
         
-        patches = [head, tail, patch1, patch2]
+        patches = [] #[head, tail, patch1, patch2]
+        for i in reversed(range(obj["pixelLength"])):
+            pt = slidercalc.get_end_point(obj["curveType"], i, obj["points"])
+            circle = plt.Circle((pt[0], pt[1]), self.radius,
+                fc='white', ec="black", linewidth=self.line_width)
+            patches.append(circle)
         
         return patches
         
@@ -102,18 +84,18 @@ class BeatmapRenderer:
         
     def draw_objects(self, objs, offset):
         last_obj = None
-        for i, obj in reversed(objs):
+        for obj in reversed(objs):
             alpha = self.get_alpha(offset - obj["startTime"])
             patches = []
-            if i not in self.obj_cache:
+            if obj["render_cache"] is None:
                 # check object type and draw it
                 if obj["object_name"] == "circle":
                     patches = self.draw_circle(obj)
                 elif obj["object_name"] == "slider":
                     patches = self.draw_slider(obj)
-                self.obj_cache[i] = patches
+                obj["render_cache"] = patches
             else: 
-                patches = self.obj_cache[i]
+                patches = obj["render_cache"]
                 
             for patch in patches:
                 patch.set_alpha(alpha)
@@ -141,15 +123,18 @@ if __name__ == "__main__":
     beatmap = parser.build_beatmap()
     renderer = BeatmapRenderer(beatmap)
     
-    import cv2
+    import cv2, os
+    tmp_file = "tmp.mp4"
+    output_file = "test.mp4"
     videodims = (640, 480)
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')    
-    video = cv2.VideoWriter("test.mp4", fourcc, 60, videodims)
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    video = cv2.VideoWriter(tmp_file, fourcc, 60, videodims)
 
-    for i in range(1000):
+    for i in range(160):
         img = renderer.render(6500 + i * 16)
         video.write(cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR))
         print("Finished processing {}".format(i), end = '\r')
         
     video.release()
-    
+    os.system("ffmpeg -y -i {} -vcodec libx264 -f mp4 {}".format(tmp_file, output_file))
+    os.remove(tmp_file)
